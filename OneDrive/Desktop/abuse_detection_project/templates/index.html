@@ -1,0 +1,1553 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Physical Abuse Detection System</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family: "Segoe UI", sans-serif;
+        background: #0f0f1a;
+        color: #e0e0e0;
+        min-height: 100vh;
+      }
+
+      .header {
+        background: linear-gradient(135deg, #1a1a2e, #16213e);
+        padding: 24px;
+        text-align: center;
+        border-bottom: 2px solid #e74c3c;
+      }
+      .header h1 {
+        font-size: 28px;
+        color: #fff;
+      }
+      .header p {
+        color: #aaa;
+        margin-top: 6px;
+      }
+      @media (max-width: 768px) {
+        .header {
+          padding: 16px;
+        }
+        .header h1 {
+          font-size: 22px;
+        }
+        .header p {
+          font-size: 13px;
+        }
+      }
+      @media (max-width: 480px) {
+        .header {
+          padding: 12px;
+        }
+        .header h1 {
+          font-size: 18px;
+        }
+        .header p {
+          font-size: 12px;
+        }
+      }
+
+      .container {
+        max-width: 1100px;
+        margin: 30px auto;
+        padding: 0 20px;
+      }
+      @media (max-width: 768px) {
+        .container {
+          margin: 20px auto;
+          padding: 0 15px;
+        }
+      }
+      @media (max-width: 480px) {
+        .container {
+          margin: 15px auto;
+          padding: 0 10px;
+        }
+      }
+
+      .card {
+        background: #1a1a2e;
+        border-radius: 12px;
+        padding: 24px;
+        margin-bottom: 24px;
+        border: 1px solid #2a2a4a;
+      }
+      .card h2 {
+        font-size: 18px;
+        margin-bottom: 16px;
+        color: #fff;
+      }
+      @media (max-width: 768px) {
+        .card {
+          padding: 16px;
+          margin-bottom: 16px;
+        }
+        .card h2 {
+          font-size: 16px;
+        }
+      }
+      @media (max-width: 480px) {
+        .card {
+          padding: 12px;
+          margin-bottom: 12px;
+        }
+        .card h2 {
+          font-size: 14px;
+        }
+      }
+
+      .mode-row {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+      .mode-btn {
+        padding: 10px 22px;
+        border-radius: 8px;
+        border: 2px solid #444;
+        background: transparent;
+        color: #aaa;
+        cursor: pointer;
+        font-size: 14px;
+        transition: all 0.2s;
+      }
+      .mode-btn.active {
+        border-color: #e74c3c;
+        background: #e74c3c22;
+        color: #e74c3c;
+      }
+      @media (max-width: 768px) {
+        .mode-row {
+          gap: 8px;
+        }
+        .mode-btn {
+          padding: 8px 16px;
+          font-size: 13px;
+        }
+      }
+      @media (max-width: 480px) {
+        .mode-row {
+          gap: 6px;
+          flex-direction: column;
+        }
+        .mode-btn {
+          padding: 10px 16px;
+          font-size: 12px;
+          width: 100%;
+        }
+      }
+
+      .tabs {
+        display: flex;
+        gap: 8px;
+        margin-bottom: 20px;
+      }
+      .tab {
+        padding: 10px 24px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        background: #2a2a4a;
+        color: #aaa;
+        transition: all 0.2s;
+      }
+      .tab.active {
+        background: #e74c3c;
+        color: #fff;
+      }
+      @media (max-width: 768px) {
+        .tabs {
+          gap: 6px;
+          margin-bottom: 16px;
+        }
+        .tab {
+          padding: 8px 16px;
+          font-size: 12px;
+        }
+      }
+      @media (max-width: 480px) {
+        .tabs {
+          gap: 4px;
+          flex-wrap: wrap;
+        }
+        .tab {
+          padding: 8px 12px;
+          font-size: 11px;
+          flex: 1;
+          min-width: calc(50% - 2px);
+        }
+      }
+
+      .upload-area {
+        border: 2px dashed #444;
+        border-radius: 12px;
+        padding: 40px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .upload-area:hover {
+        border-color: #e74c3c;
+        background: #e74c3c11;
+      }
+      .upload-area input {
+        display: none;
+      }
+      .upload-area p {
+        color: #aaa;
+        margin-top: 8px;
+        font-size: 14px;
+      }
+      .upload-icon {
+        font-size: 48px;
+      }
+      @media (max-width: 768px) {
+        .upload-area {
+          padding: 30px;
+        }
+        .upload-icon {
+          font-size: 36px;
+        }
+        .upload-area p {
+          font-size: 13px;
+        }
+      }
+      @media (max-width: 480px) {
+        .upload-area {
+          padding: 20px;
+        }
+        .upload-icon {
+          font-size: 32px;
+        }
+        .upload-area p {
+          font-size: 12px;
+        }
+      }
+
+      .btn {
+        padding: 12px 32px;
+        border-radius: 8px;
+        border: none;
+        cursor: pointer;
+        font-size: 15px;
+        font-weight: 600;
+        transition: all 0.2s;
+      }
+      .btn-primary {
+        background: #e74c3c;
+        color: #fff;
+        width: 100%;
+        margin-top: 16px;
+      }
+      .btn-primary:hover {
+        background: #c0392b;
+      }
+      .btn-primary:disabled {
+        background: #555;
+        cursor: not-allowed;
+      }
+      @media (max-width: 768px) {
+        .btn {
+          padding: 10px 24px;
+          font-size: 14px;
+        }
+        .btn-primary {
+          margin-top: 12px;
+        }
+      }
+      @media (max-width: 480px) {
+        .btn {
+          padding: 10px 16px;
+          font-size: 13px;
+        }
+        .btn-primary {
+          margin-top: 12px;
+        }
+      }
+
+      .alert-box {
+        background: #e74c3c22;
+        border: 2px solid #e74c3c;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        animation: pulse 1s infinite;
+        display: none;
+        margin-bottom: 20px;
+      }
+      .alert-box h2 {
+        color: #e74c3c;
+        font-size: 22px;
+      }
+      .alert-box p {
+        color: #aaa;
+        margin-top: 6px;
+      }
+      @keyframes pulse {
+        0%,
+        100% {
+          opacity: 1;
+        }
+        50% {
+          opacity: 0.7;
+        }
+      }
+
+      .safe-box {
+        background: #27ae6022;
+        border: 2px solid #27ae60;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        display: none;
+        margin-bottom: 20px;
+      }
+      .safe-box h2 {
+        color: #27ae60;
+        font-size: 22px;
+      }
+      @media (max-width: 768px) {
+        .alert-box,
+        .safe-box {
+          padding: 16px;
+        }
+        .alert-box h2,
+        .safe-box h2 {
+          font-size: 18px;
+        }
+      }
+      @media (max-width: 480px) {
+        .alert-box,
+        .safe-box {
+          padding: 12px;
+        }
+        .alert-box h2,
+        .safe-box h2 {
+          font-size: 16px;
+        }
+        .alert-box p,
+        .safe-box p {
+          font-size: 12px;
+        }
+      }
+
+      .result-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+      }
+      @media (max-width: 768px) {
+        .result-grid {
+          gap: 16px;
+        }
+      }
+      @media (max-width: 600px) {
+        .result-grid {
+          grid-template-columns: 1fr;
+          gap: 12px;
+        }
+      }
+
+      .img-card {
+        background: #0f0f1a;
+        border-radius: 10px;
+        overflow: hidden;
+        border: 1px solid #2a2a4a;
+      }
+      .img-card h3 {
+        padding: 12px 16px;
+        font-size: 14px;
+        color: #aaa;
+        background: #1a1a2e;
+        border-bottom: 1px solid #2a2a4a;
+      }
+      .img-card img {
+        width: 100%;
+        display: block;
+      }
+      @media (max-width: 768px) {
+        .img-card h3 {
+          padding: 10px 12px;
+          font-size: 13px;
+        }
+      }
+      @media (max-width: 480px) {
+        .img-card h3 {
+          padding: 8px 10px;
+          font-size: 12px;
+        }
+      }
+
+      .stats {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
+        margin-bottom: 20px;
+      }
+      .stat {
+        background: #0f0f1a;
+        border-radius: 8px;
+        padding: 14px 20px;
+        border: 1px solid #2a2a4a;
+        flex: 1;
+        text-align: center;
+      }
+      .stat .val {
+        font-size: 28px;
+        font-weight: 700;
+      }
+      .stat .lbl {
+        font-size: 12px;
+        color: #aaa;
+        margin-top: 4px;
+      }
+      .violence-val {
+        color: #e74c3c;
+      }
+      .nonviolence-val {
+        color: #27ae60;
+      }
+      .confidence-val {
+        color: #f39c12;
+      }
+      @media (max-width: 768px) {
+        .stats {
+          gap: 10px;
+        }
+        .stat {
+          padding: 12px 16px;
+          min-width: calc(50% - 5px);
+        }
+        .stat .val {
+          font-size: 24px;
+        }
+        .stat .lbl {
+          font-size: 11px;
+        }
+      }
+      @media (max-width: 480px) {
+        .stats {
+          gap: 8px;
+        }
+        .stat {
+          padding: 10px 12px;
+        }
+        .stat .val {
+          font-size: 20px;
+        }
+        .stat .lbl {
+          font-size: 10px;
+        }
+      }
+
+      .skeleton-note {
+        background: #2a2a4a;
+        border-radius: 8px;
+        padding: 12px 16px;
+        font-size: 13px;
+        color: #aaa;
+        margin-top: 12px;
+      }
+      .skeleton-note span {
+        color: #3498db;
+      }
+      @media (max-width: 768px) {
+        .skeleton-note {
+          padding: 10px 12px;
+          font-size: 12px;
+        }
+      }
+      @media (max-width: 480px) {
+        .skeleton-note {
+          padding: 8px 10px;
+          font-size: 11px;
+        }
+      }
+
+      .batch-results {
+        margin-top: 20px;
+      }
+      .batch-item {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 14px;
+        border-bottom: 1px solid #2a2a4a;
+      }
+      .batch-item img {
+        width: 60px;
+        height: 60px;
+        object-fit: cover;
+        border-radius: 6px;
+      }
+      .batch-item .info {
+        flex: 1;
+      }
+      .batch-item .fname {
+        font-size: 14px;
+        color: #fff;
+      }
+      .batch-item .conf {
+        font-size: 12px;
+        color: #aaa;
+        margin-top: 4px;
+      }
+      .badge {
+        padding: 4px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+      .badge-v {
+        background: #e74c3c22;
+        color: #e74c3c;
+        border: 1px solid #e74c3c;
+      }
+      .badge-nv {
+        background: #27ae6022;
+        color: #27ae60;
+        border: 1px solid #27ae60;
+      }
+      @media (max-width: 768px) {
+        .batch-item {
+          gap: 12px;
+          padding: 12px;
+        }
+        .batch-item img {
+          width: 50px;
+          height: 50px;
+        }
+        .batch-item .fname {
+          font-size: 13px;
+        }
+        .batch-item .conf {
+          font-size: 11px;
+        }
+        .badge {
+          padding: 3px 10px;
+          font-size: 11px;
+        }
+      }
+      @media (max-width: 480px) {
+        .batch-item {
+          gap: 10px;
+          padding: 10px;
+        }
+        .batch-item img {
+          width: 45px;
+          height: 45px;
+        }
+        .batch-item .fname {
+          font-size: 12px;
+        }
+        .batch-item .conf {
+          font-size: 10px;
+        }
+        .badge {
+          padding: 3px 8px;
+          font-size: 10px;
+        }
+      }
+
+      .batch-summary {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 16px;
+        flex-wrap: wrap;
+      }
+      .sum-card {
+        flex: 1;
+        background: #0f0f1a;
+        border-radius: 8px;
+        padding: 16px;
+        text-align: center;
+        border: 1px solid #2a2a4a;
+      }
+      .sum-card .n {
+        font-size: 32px;
+        font-weight: 700;
+      }
+      .sum-card .l {
+        font-size: 12px;
+        color: #aaa;
+        margin-top: 4px;
+      }
+      @media (max-width: 768px) {
+        .batch-summary {
+          gap: 10px;
+        }
+        .sum-card {
+          padding: 12px;
+          min-width: calc(50% - 5px);
+        }
+        .sum-card .n {
+          font-size: 28px;
+        }
+        .sum-card .l {
+          font-size: 11px;
+        }
+      }
+      @media (max-width: 480px) {
+        .batch-summary {
+          gap: 8px;
+          flex-direction: column;
+        }
+        .sum-card {
+          padding: 10px;
+        }
+        .sum-card .n {
+          font-size: 24px;
+        }
+        .sum-card .l {
+          font-size: 10px;
+        }
+      }
+
+      .loading {
+        text-align: center;
+        padding: 40px;
+        display: none;
+      }
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid #333;
+        border-top: 4px solid #e74c3c;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        margin: 0 auto 16px;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @media (max-width: 768px) {
+        .loading {
+          padding: 30px;
+        }
+        .loading p {
+          font-size: 13px;
+        }
+      }
+      @media (max-width: 480px) {
+        .loading {
+          padding: 20px;
+        }
+        .spinner {
+          width: 40px;
+          height: 40px;
+          border: 3px solid #333;
+          border-top: 3px solid #e74c3c;
+          margin: 0 auto 12px;
+        }
+        .loading p {
+          font-size: 12px;
+        }
+      }
+
+      #single-panel,
+      #batch-panel,
+      #video-panel,
+      #webcam-panel {
+        display: none;
+      }
+      #single-panel.active,
+      #batch-panel.active,
+      #video-panel.active,
+      #webcam-panel.active {
+        display: block;
+      }
+
+      .webcam-wrap {
+        display: grid;
+        grid-template-columns: 1fr;
+        gap: 14px;
+      }
+      .webcam-feed {
+        width: 100%;
+        border-radius: 10px;
+        background: #000;
+        border: 1px solid #2a2a4a;
+      }
+      .webcam-actions {
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+      }
+      .btn-secondary {
+        background: #2a2a4a;
+        color: #fff;
+      }
+      .btn-secondary:hover {
+        background: #3a3a5a;
+      }
+      .webcam-status {
+        font-size: 13px;
+        color: #aaa;
+      }
+      @media (max-width: 768px) {
+        .webcam-actions {
+          gap: 8px;
+        }
+        .webcam-status {
+          font-size: 12px;
+        }
+      }
+      @media (max-width: 480px) {
+        .webcam-actions {
+          gap: 6px;
+          flex-direction: column;
+        }
+        .webcam-actions .btn {
+          width: 100%;
+        }
+        .webcam-status {
+          font-size: 11px;
+        }
+      }
+
+      .timeline-frame {
+        background: #0f0f1a;
+        border-radius: 8px;
+        overflow: hidden;
+        width: 160px;
+        border: 2px solid #2a2a4a;
+      }
+      .timeline-frame.violent {
+        border-color: #e74c3c;
+      }
+      .timeline-frame.peaceful {
+        border-color: #27ae60;
+      }
+      .timeline-frame img {
+        width: 100%;
+        height: 100px;
+        object-fit: cover;
+      }
+      .timeline-frame .frame-info {
+        padding: 8px;
+      }
+      .timeline-frame .ts {
+        font-size: 11px;
+        color: #aaa;
+      }
+      .timeline-frame .flbl {
+        font-size: 12px;
+        font-weight: 600;
+        margin-top: 2px;
+      }
+      .violent .flbl {
+        color: #e74c3c;
+      }
+      .peaceful .flbl {
+        color: #27ae60;
+      }
+      @media (max-width: 768px) {
+        .timeline-frame {
+          width: 140px;
+        }
+        .timeline-frame img {
+          height: 90px;
+        }
+        .timeline-frame .ts {
+          font-size: 10px;
+        }
+        .timeline-frame .flbl {
+          font-size: 11px;
+        }
+      }
+      @media (max-width: 480px) {
+        .timeline-frame {
+          width: 110px;
+        }
+        .timeline-frame img {
+          height: 75px;
+        }
+        .timeline-frame .frame-info {
+          padding: 6px;
+        }
+        .timeline-frame .ts {
+          font-size: 9px;
+        }
+        .timeline-frame .flbl {
+          font-size: 10px;
+        }
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="header">
+      <h1>🛡️ Physical Abuse Detection System</h1>
+      <p>AI-powered violence detection with pose estimation</p>
+    </div>
+
+    <div class="container">
+      <!-- Mode Selector -->
+      <div class="card">
+        <h2>Detection Mode</h2>
+        <div class="mode-row">
+          <button class="mode-btn" id="btn-cctv" onclick="setMode('cctv')">
+            📹 CCTV Mode
+          </button>
+          <button
+            class="mode-btn active"
+            id="btn-social"
+            onclick="setMode('social_media')"
+          >
+            📱 Social Media Mode
+          </button>
+          <span id="mode-desc" style="color: #aaa; font-size: 13px">
+            Threshold: 0.5 — balanced detection
+          </span>
+        </div>
+      </div>
+
+      <!-- Tabs -->
+      <div class="tabs">
+        <button class="tab active" onclick="switchTab('single')">
+          🖼️ Single Image
+        </button>
+        <button class="tab" onclick="switchTab('batch')">
+          📂 Batch Detection
+        </button>
+        <button class="tab" onclick="switchTab('video')">
+          🎥 Video Analysis
+        </button>
+        <button class="tab" onclick="switchTab('webcam')">
+          📡 Live Webcam
+        </button>
+      </div>
+
+      <!-- ── SINGLE IMAGE PANEL ── -->
+      <div id="single-panel" class="active">
+        <div class="card">
+          <h2>Upload Image</h2>
+          <div
+            class="upload-area"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            <input
+              type="file"
+              id="fileInput"
+              accept=".jpg,.jpeg,.png"
+              onchange="previewFile(this)"
+            />
+            <div class="upload-icon">📁</div>
+            <p>Click to upload an image (JPG / PNG)</p>
+            <p id="file-name" style="color: #e74c3c; margin-top: 8px"></p>
+          </div>
+          <img
+            id="preview"
+            style="
+              max-width: 100%;
+              border-radius: 8px;
+              margin-top: 16px;
+              display: none;
+            "
+          />
+          <button
+            class="btn btn-primary"
+            id="analyzeBtn"
+            onclick="analyzeSingle()"
+            disabled
+          >
+            Analyze Image
+          </button>
+        </div>
+
+        <div class="loading" id="loading">
+          <div class="spinner"></div>
+          <p style="color: #aaa">Analyzing image + drawing pose skeleton...</p>
+        </div>
+
+        <div class="alert-box" id="alert-box">
+          <h2>⚠️ Violence Detected!</h2>
+          <p id="alert-detail"></p>
+        </div>
+        <div class="safe-box" id="safe-box">
+          <h2>✅ No Violence Detected</h2>
+          <p id="safe-detail"></p>
+        </div>
+
+        <div id="result-stats" class="hidden">
+          <div class="stats">
+            <div class="stat">
+              <div class="val" id="stat-label">-</div>
+              <div class="lbl">Prediction</div>
+            </div>
+            <div class="stat">
+              <div class="val confidence-val" id="stat-conf">-</div>
+              <div class="lbl">Confidence</div>
+            </div>
+            <div class="stat">
+              <div class="val" id="stat-mode">-</div>
+              <div class="lbl">Mode</div>
+            </div>
+          </div>
+        </div>
+
+        <div id="result-images" class="hidden">
+          <div class="result-grid" id="img-grid"></div>
+          <div class="skeleton-note" id="skel-note" style="display: none">
+            <span>🦴 Pose Skeleton:</span> Green dots = body joints · Red lines
+            = bone connections · Shows exactly which body parts triggered the
+            violence detection
+          </div>
+        </div>
+      </div>
+
+      <!-- ── BATCH PANEL ── -->
+      <div id="batch-panel">
+        <div class="card">
+          <h2>Batch Upload</h2>
+          <div
+            class="upload-area"
+            onclick="document.getElementById('batchInput').click()"
+          >
+            <input
+              type="file"
+              id="batchInput"
+              accept=".jpg,.jpeg,.png"
+              multiple
+              onchange="batchPreview(this)"
+            />
+            <div class="upload-icon">📂</div>
+            <p>Click to upload multiple images</p>
+            <p id="batch-count" style="color: #e74c3c; margin-top: 8px"></p>
+          </div>
+          <button
+            class="btn btn-primary"
+            id="batchBtn"
+            onclick="analyzeBatch()"
+            disabled
+          >
+            Analyze All Images
+          </button>
+        </div>
+
+        <div class="loading" id="batch-loading">
+          <div class="spinner"></div>
+          <p style="color: #aaa">Analyzing all images...</p>
+        </div>
+
+        <div id="batch-results" class="hidden">
+          <div class="card">
+            <h2>Batch Results</h2>
+            <div class="batch-summary" id="batch-summary"></div>
+            <div id="batch-list"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── VIDEO PANEL ── -->
+      <div id="video-panel">
+        <div class="card">
+          <h2>Video Analysis</h2>
+          <div
+            class="upload-area"
+            onclick="document.getElementById('videoInput').click()"
+          >
+            <input
+              type="file"
+              id="videoInput"
+              accept=".mp4,.avi,.mov,.mkv"
+              onchange="videoPreview(this)"
+            />
+            <div class="upload-icon">🎥</div>
+            <p>Click to upload a video (MP4 / AVI / MOV)</p>
+            <p id="video-name" style="color: #e74c3c; margin-top: 8px"></p>
+          </div>
+          <video
+            id="video-preview"
+            controls
+            style="
+              width: 100%;
+              border-radius: 8px;
+              margin-top: 16px;
+              display: none;
+            "
+          ></video>
+          <p style="color: #aaa; font-size: 13px; margin-top: 10px">
+            ℹ️ System analyzes every 8 frames · max 60 segments
+          </p>
+          <button
+            class="btn btn-primary"
+            id="videoBtn"
+            onclick="analyzeVideo()"
+            disabled
+          >
+            Analyze Video
+          </button>
+        </div>
+
+        <div class="loading" id="video-loading">
+          <div class="spinner"></div>
+          <p style="color: #aaa">
+            Analyzing video with AI — this may take 1-2 minutes...
+          </p>
+        </div>
+
+        <div id="video-results" class="hidden">
+          <div class="card">
+            <h2>Video Analysis Results</h2>
+            <div
+              id="video-verdict-box"
+              style="
+                border-radius: 10px;
+                padding: 20px;
+                text-align: center;
+                margin-bottom: 20px;
+              "
+            >
+              <h2 id="video-verdict-text" style="font-size: 24px"></h2>
+              <p
+                id="video-verdict-detail"
+                style="color: #aaa; margin-top: 6px"
+              ></p>
+            </div>
+            <div class="stats" style="margin-bottom: 20px">
+              <div class="stat">
+                <div class="val" id="v-duration" style="color: #fff">-</div>
+                <div class="lbl">Duration (sec)</div>
+              </div>
+              <div class="stat">
+                <div class="val" id="v-analyzed" style="color: #f39c12">-</div>
+                <div class="lbl">Segments Analyzed</div>
+              </div>
+              <div class="stat">
+                <div class="val violence-val" id="v-violence">-</div>
+                <div class="lbl">Violent Segments</div>
+              </div>
+              <div class="stat">
+                <div class="val" id="v-percent" style="color: #e74c3c">-</div>
+                <div class="lbl">Violence %</div>
+              </div>
+            </div>
+            <h3 style="margin-bottom: 12px; font-size: 15px; color: #aaa">
+              Frame by Frame Timeline
+            </h3>
+            <div
+              id="video-timeline"
+              style="display: flex; flex-wrap: wrap; gap: 10px"
+            ></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── WEBCAM PANEL ── -->
+      <div id="webcam-panel">
+        <div class="card">
+          <h2>Live CCTV Webcam Mode</h2>
+          <div class="webcam-wrap">
+            <video
+              id="webcam-feed"
+              class="webcam-feed"
+              autoplay
+              muted
+              playsinline
+            ></video>
+            <canvas id="webcam-canvas" style="display: none"></canvas>
+            <div class="webcam-actions">
+              <button class="btn btn-primary" onclick="startWebcam()">
+                Start Live Detection
+              </button>
+              <button class="btn btn-secondary" onclick="stopWebcam()">
+                Stop
+              </button>
+            </div>
+            <p class="webcam-status" id="webcam-status">
+              Camera is stopped. Click Start Live Detection.
+            </p>
+          </div>
+        </div>
+
+        <div id="webcam-results" class="hidden">
+          <div class="stats">
+            <div class="stat">
+              <div class="val" id="webcam-label">-</div>
+              <div class="lbl">Live Prediction</div>
+            </div>
+            <div class="stat">
+              <div class="val confidence-val" id="webcam-conf">-</div>
+              <div class="lbl">Confidence</div>
+            </div>
+            <div class="stat">
+              <div class="val" id="webcam-mode">-</div>
+              <div class="lbl">Mode</div>
+            </div>
+          </div>
+
+          <div class="result-grid" id="webcam-grid"></div>
+        </div>
+      </div>
+    </div>
+
+    <audio id="alert-sound" preload="auto">
+      <source src="/static/sounds/alert.mp3" type="audio/mpeg" />
+    </audio>
+
+    <script>
+      let currentMode = "social_media";
+      let webcamStream = null;
+      let webcamTimer = null;
+      let webcamBusy = false;
+
+      function setMode(mode) {
+        currentMode = mode;
+        document
+          .querySelectorAll(".mode-btn")
+          .forEach((b) => b.classList.remove("active"));
+        const desc = document.getElementById("mode-desc");
+        if (mode === "cctv") {
+          document.getElementById("btn-cctv").classList.add("active");
+          desc.textContent =
+            "Threshold: 0.3 — more sensitive, better for surveillance";
+        } else {
+          document.getElementById("btn-social").classList.add("active");
+          desc.textContent = "Threshold: 0.5 — balanced detection";
+        }
+      }
+
+      function switchTab(tab) {
+        document
+          .querySelectorAll(".tab")
+          .forEach((t) => t.classList.remove("active"));
+        document.getElementById("single-panel").classList.remove("active");
+        document.getElementById("batch-panel").classList.remove("active");
+        document.getElementById("video-panel").classList.remove("active");
+        document.getElementById("webcam-panel").classList.remove("active");
+
+        if (tab !== "webcam") {
+          stopWebcam();
+        }
+
+        if (tab === "single") {
+          document.querySelectorAll(".tab")[0].classList.add("active");
+          document.getElementById("single-panel").classList.add("active");
+        } else if (tab === "batch") {
+          document.querySelectorAll(".tab")[1].classList.add("active");
+          document.getElementById("batch-panel").classList.add("active");
+        } else if (tab === "video") {
+          document.querySelectorAll(".tab")[2].classList.add("active");
+          document.getElementById("video-panel").classList.add("active");
+        } else {
+          document.querySelectorAll(".tab")[3].classList.add("active");
+          document.getElementById("webcam-panel").classList.add("active");
+        }
+      }
+
+      function updateWebcamUi(data) {
+        const labelEl = document.getElementById("webcam-label");
+        labelEl.textContent = data.label;
+        labelEl.className =
+          "val " +
+          (data.label === "Violence" ? "violence-val" : "nonviolence-val");
+        document.getElementById("webcam-conf").textContent =
+          data.confidence + "%";
+        document.getElementById("webcam-mode").textContent =
+          data.mode === "cctv" ? "📹 CCTV" : "📱 Social";
+
+        const grid = document.getElementById("webcam-grid");
+        grid.innerHTML = `
+          <div class="img-card">
+            <h3>Live Frame</h3>
+            <img src="data:image/jpeg;base64,${data.original_img}"/>
+          </div>
+          <div class="img-card">
+            <h3>${data.label === "Violence" ? "Blurred Output" : "Pose Skeleton"}</h3>
+            <img src="data:image/jpeg;base64,${
+              data.label === "Violence" && data.blurred_img
+                ? data.blurred_img
+                : data.skeleton_img
+            }"/>
+          </div>`;
+
+        document.getElementById("webcam-results").classList.remove("hidden");
+      }
+
+      async function analyzeWebcamFrame() {
+        if (webcamBusy || !webcamStream) return;
+
+        const video = document.getElementById("webcam-feed");
+        if (video.readyState < 2 || !video.videoWidth || !video.videoHeight) {
+          return;
+        }
+
+        const canvas = document.getElementById("webcam-canvas");
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+        const frame = canvas.toDataURL("image/jpeg", 0.82);
+        webcamBusy = true;
+
+        try {
+          const res = await fetch("/predict_webcam_frame", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ frame, mode: currentMode }),
+          });
+          const data = await res.json();
+
+          if (data.error) {
+            document.getElementById("webcam-status").textContent = data.error;
+            return;
+          }
+
+          updateWebcamUi(data);
+
+          if (data.label === "Violence") {
+            document.getElementById("webcam-status").textContent =
+              "⚠ Live alert: Violence detected in webcam feed.";
+            document
+              .getElementById("alert-sound")
+              .play()
+              .catch(() => {});
+          } else {
+            document.getElementById("webcam-status").textContent =
+              "Live monitoring active: no violence detected in latest frame.";
+          }
+        } catch (err) {
+          document.getElementById("webcam-status").textContent =
+            "Webcam analysis error: " + err.message;
+        } finally {
+          webcamBusy = false;
+        }
+      }
+
+      async function startWebcam() {
+        if (webcamStream) return;
+
+        try {
+          webcamStream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: false,
+          });
+          const video = document.getElementById("webcam-feed");
+          video.srcObject = webcamStream;
+
+          document.getElementById("webcam-status").textContent =
+            "Camera started. Running live detection every 1.5 seconds.";
+
+          webcamTimer = setInterval(analyzeWebcamFrame, 1500);
+        } catch (err) {
+          webcamStream = null;
+          document.getElementById("webcam-status").textContent =
+            "Camera access failed: " + err.message;
+        }
+      }
+
+      function stopWebcam() {
+        if (webcamTimer) {
+          clearInterval(webcamTimer);
+          webcamTimer = null;
+        }
+
+        if (webcamStream) {
+          webcamStream.getTracks().forEach((track) => track.stop());
+          webcamStream = null;
+        }
+
+        const video = document.getElementById("webcam-feed");
+        if (video) {
+          video.srcObject = null;
+        }
+
+        document.getElementById("webcam-status").textContent =
+          "Camera is stopped. Click Start Live Detection.";
+      }
+
+      function previewFile(input) {
+        const file = input.files[0];
+        if (!file) return;
+        document.getElementById("file-name").textContent = file.name;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          const prev = document.getElementById("preview");
+          prev.src = e.target.result;
+          prev.style.display = "block";
+        };
+        reader.readAsDataURL(file);
+        document.getElementById("analyzeBtn").disabled = false;
+      }
+
+      function batchPreview(input) {
+        document.getElementById("batch-count").textContent =
+          input.files.length + " image(s) selected";
+        document.getElementById("batchBtn").disabled = false;
+      }
+
+      function videoPreview(input) {
+        const file = input.files[0];
+        if (!file) return;
+        document.getElementById("video-name").textContent = file.name;
+        const url = URL.createObjectURL(file);
+        const prev = document.getElementById("video-preview");
+        prev.src = url;
+        prev.style.display = "block";
+        document.getElementById("videoBtn").disabled = false;
+      }
+
+      async function analyzeSingle() {
+        const fileInput = document.getElementById("fileInput");
+        if (!fileInput.files[0]) return;
+
+        document.getElementById("loading").style.display = "block";
+        document.getElementById("alert-box").style.display = "none";
+        document.getElementById("safe-box").style.display = "none";
+        document.getElementById("result-stats").classList.add("hidden");
+        document.getElementById("result-images").classList.add("hidden");
+        document.getElementById("analyzeBtn").disabled = true;
+
+        const formData = new FormData();
+        formData.append("file", fileInput.files[0]);
+        formData.append("mode", currentMode);
+
+        try {
+          const res = await fetch("/predict", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("analyzeBtn").disabled = false;
+
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+
+          if (data.label === "Violence") {
+            document.getElementById("alert-box").style.display = "block";
+            document.getElementById("alert-detail").textContent =
+              `Confidence: ${data.confidence}% | Mode: ${data.mode}`;
+            document
+              .getElementById("alert-sound")
+              .play()
+              .catch(() => {});
+          } else {
+            document.getElementById("safe-box").style.display = "block";
+            document.getElementById("safe-detail").textContent =
+              `Confidence: ${data.confidence}% | Mode: ${data.mode}`;
+          }
+
+          const labelEl = document.getElementById("stat-label");
+          labelEl.textContent = data.label;
+          labelEl.className =
+            "val " +
+            (data.label === "Violence" ? "violence-val" : "nonviolence-val");
+          document.getElementById("stat-conf").textContent =
+            data.confidence + "%";
+          document.getElementById("stat-mode").textContent =
+            data.mode === "cctv" ? "📹 CCTV" : "📱 Social";
+          document.getElementById("result-stats").classList.remove("hidden");
+
+          const grid = document.getElementById("img-grid");
+          grid.innerHTML = "";
+          grid.innerHTML += `
+        <div class="img-card">
+          <h3>Original Image</h3>
+          <img src="data:image/jpeg;base64,${data.original_img}"/>
+        </div>`;
+          grid.innerHTML += `
+        <div class="img-card">
+          <h3>Pose Skeleton Analysis</h3>
+          <img src="data:image/jpeg;base64,${data.skeleton_img}"/>
+        </div>`;
+          if (data.blurred_img) {
+            grid.innerHTML += `
+          <div class="img-card">
+            <h3>Blurred (Content Moderation)</h3>
+            <img src="data:image/jpeg;base64,${data.blurred_img}"/>
+          </div>`;
+          }
+          document.getElementById("result-images").classList.remove("hidden");
+          document.getElementById("skel-note").style.display =
+            data.skeleton_found ? "block" : "none";
+        } catch (err) {
+          document.getElementById("loading").style.display = "none";
+          document.getElementById("analyzeBtn").disabled = false;
+          alert("Error: " + err.message);
+        }
+      }
+
+      async function analyzeBatch() {
+        const input = document.getElementById("batchInput");
+        if (!input.files.length) return;
+
+        document.getElementById("batch-loading").style.display = "block";
+        document.getElementById("batch-results").classList.add("hidden");
+        document.getElementById("batchBtn").disabled = true;
+
+        const formData = new FormData();
+        for (const f of input.files) formData.append("files", f);
+        formData.append("mode", currentMode);
+
+        try {
+          const res = await fetch("/predict_batch", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          document.getElementById("batch-loading").style.display = "none";
+          document.getElementById("batchBtn").disabled = false;
+
+          document.getElementById("batch-summary").innerHTML = `
+        <div class="sum-card">
+          <div class="n" style="color:#fff">${data.total}</div>
+          <div class="l">Total Images</div>
+        </div>
+        <div class="sum-card">
+          <div class="n" style="color:#e74c3c">
+            ${data.violence_count}
+          </div>
+          <div class="l">Violence Detected</div>
+        </div>
+        <div class="sum-card">
+          <div class="n" style="color:#27ae60">
+            ${data.non_violence_count}
+          </div>
+          <div class="l">Non-Violence</div>
+        </div>`;
+
+          const list = document.getElementById("batch-list");
+          list.innerHTML = "";
+          data.results.forEach((r) => {
+            const imgSrc =
+              r.blurred_img && r.label === "Violence"
+                ? `data:image/jpeg;base64,${r.blurred_img}`
+                : `data:image/jpeg;base64,${r.original_img}`;
+            list.innerHTML += `
+          <div class="batch-item">
+            <img src="${imgSrc}"/>
+            <div class="info">
+              <div class="fname">${r.filename}</div>
+              <div class="conf">Confidence: ${r.confidence}%</div>
+            </div>
+            <span class="badge
+              ${r.label === "Violence" ? "badge-v" : "badge-nv"}">
+              ${r.label}
+            </span>
+          </div>`;
+          });
+
+          document.getElementById("batch-results").classList.remove("hidden");
+          if (data.violence_count > 0) {
+            document
+              .getElementById("alert-sound")
+              .play()
+              .catch(() => {});
+          }
+        } catch (err) {
+          document.getElementById("batch-loading").style.display = "none";
+          document.getElementById("batchBtn").disabled = false;
+          alert("Error: " + err.message);
+        }
+      }
+
+      async function analyzeVideo() {
+        const input = document.getElementById("videoInput");
+        if (!input.files[0]) return;
+
+        document.getElementById("video-loading").style.display = "block";
+        document.getElementById("video-results").classList.add("hidden");
+        document.getElementById("videoBtn").disabled = true;
+
+        const formData = new FormData();
+        formData.append("video", input.files[0]);
+        formData.append("mode", currentMode);
+
+        try {
+          const res = await fetch("/predict_video", {
+            method: "POST",
+            body: formData,
+          });
+          const data = await res.json();
+
+          document.getElementById("video-loading").style.display = "none";
+          document.getElementById("videoBtn").disabled = false;
+
+          if (data.error) {
+            alert(data.error);
+            return;
+          }
+
+          const vbox = document.getElementById("video-verdict-box");
+          const vtxt = document.getElementById("video-verdict-text");
+          const vdet = document.getElementById("video-verdict-detail");
+
+          if (data.overall_verdict === "Violence") {
+            vbox.style.background = "#e74c3c22";
+            vbox.style.border = "2px solid #e74c3c";
+            vtxt.textContent = "⚠️ Violence Detected in Video!";
+            vtxt.style.color = "#e74c3c";
+            document
+              .getElementById("alert-sound")
+              .play()
+              .catch(() => {});
+          } else {
+            vbox.style.background = "#27ae6022";
+            vbox.style.border = "2px solid #27ae60";
+            vtxt.textContent = "✅ No Violence Detected";
+            vtxt.style.color = "#27ae60";
+          }
+          vdet.textContent =
+            `${data.violence_percentage}% of segments flagged · ` +
+            `Duration: ${data.duration}s · Mode: ${data.mode}`;
+
+          document.getElementById("v-duration").textContent = data.duration;
+          document.getElementById("v-analyzed").textContent =
+            data.total_analyzed;
+          document.getElementById("v-violence").textContent =
+            data.violence_frames;
+          document.getElementById("v-percent").textContent =
+            data.violence_percentage + "%";
+
+          const timeline = document.getElementById("video-timeline");
+          timeline.innerHTML = "";
+          data.results.forEach((r) => {
+            const isViolent = r.label === "Violence";
+            const imgSrc = `data:image/jpeg;base64,${r.skeleton_img}`;
+            timeline.innerHTML += `
+          <div class="timeline-frame
+               ${isViolent ? "violent" : "peaceful"}">
+            <img src="${imgSrc}"/>
+            <div class="frame-info">
+              <div class="ts">${r.timestamp}s</div>
+              <div class="flbl">
+                ${isViolent ? "⚠️ Violence" : "✅ Safe"}
+                · ${r.confidence}%
+              </div>
+            </div>
+          </div>`;
+          });
+
+          document.getElementById("video-results").classList.remove("hidden");
+        } catch (err) {
+          document.getElementById("video-loading").style.display = "none";
+          document.getElementById("videoBtn").disabled = false;
+          alert("Error: " + err.message);
+        }
+      }
+
+      window.addEventListener("beforeunload", stopWebcam);
+    </script>
+  </body>
+</html>
