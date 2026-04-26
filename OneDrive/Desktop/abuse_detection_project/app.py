@@ -8,6 +8,7 @@ from tensorflow.keras.preprocessing import image
 import base64
 import binascii
 from werkzeug.utils import secure_filename
+import gdown
 
 app = Flask(__name__)
 
@@ -112,6 +113,30 @@ MODE_THRESHOLDS = {
 }
 
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# ── Download models if not present ───────────────────────────
+print("Checking for model files...")
+if not os.path.exists(MODEL_PATH):
+    print("Downloading image model...")
+    try:
+        gdown.download(
+            'https://drive.google.com/uc?id=1iD4fTGnUqcIqY1MC6tA-3FxMvlzqezmm',
+            MODEL_PATH, quiet=False
+        )
+        print("Image model downloaded!")
+    except Exception as e:
+        print(f"Failed to download image model: {e}")
+
+if not os.path.exists(VIDEO_MODEL_PATH):
+    print("Downloading video model...")
+    try:
+        gdown.download(
+            'https://drive.google.com/uc?id=1cBIkNEP9UT5YppdeVftYtBUL1Cyj820f',
+            VIDEO_MODEL_PATH, quiet=False
+        )
+        print("Video model downloaded!")
+    except Exception as e:
+        print(f"Failed to download video model: {e}")
 
 # ── Load models ───────────────────────────────────────────────
 print("Loading image model...")
@@ -401,4 +426,5 @@ def predict_webcam_frame():
     })
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
