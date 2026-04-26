@@ -10,6 +10,8 @@ import binascii
 from werkzeug.utils import secure_filename
 import gdown
 
+
+
 app = Flask(__name__)
 
 from ultralytics import YOLO
@@ -426,5 +428,7 @@ def predict_webcam_frame():
     })
 
 if __name__ == '__main__':
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 7860))
     app.run(host='0.0.0.0', port=port, debug=False)
+
+    
