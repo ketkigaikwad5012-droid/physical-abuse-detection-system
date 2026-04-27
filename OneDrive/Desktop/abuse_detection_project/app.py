@@ -9,17 +9,28 @@ import base64
 import binascii
 from werkzeug.utils import secure_filename
 import gdown
+import logging
 
-
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
-from ultralytics import YOLO
-yolo_pose = YOLO('yolov8n-pose.pt')
+# ── Global model variables (lazy loaded) ───────────────────
+yolo_pose = None
+model = None
+video_model = None
 
 def draw_pose_skeleton(img_path):
+    yolo_pose_model = get_yolo_pose()
+    if yolo_pose_model is None:
+        logger.warning("YOLO pose model not available")
+        img_bgr = cv2.imread(img_path)
+        _, buffer = cv2.imencode('.jpg', img_bgr)
+        return base64.b64encode(buffer).decode('utf-8'), False
+
     img_bgr = cv2.imread(img_path)
-    results  = yolo_pose(img_path, verbose=False)
+    results = yolo_pose_model(img_path, verbose=False)
     skeleton_found = False
 
     KEY_CONNECTIONS = [
@@ -61,9 +72,103 @@ def draw_pose_skeleton(img_path):
     return base64.b64encode(buffer).decode('utf-8'), skeleton_found
 
 
+# ── Config ───────────────────────────────────────────────────
+UPLOAD_FOLDER = 'uploads'
+ALLOWED_EXT   = {'jpg', 'jpeg', 'png'}
+MODEL_PATH    = 'violence_model_v2.h5'
+VIDEO_MODEL_PATH = 'violence_video_model_v2.h5'
+
+MODE_THRESHOLDS = {
+    'cctv':         0.2,
+    'social_media': 0.4
+}
+
+app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+
+# Create uploads directory if it doesn't exist
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+# ── Model initialization functions ───────────────────────────
+def get_yolo_pose():
+    global yolo_pose
+    if yolo_pose is None:
+        logger.info("Loading YOLO pose model...")
+        try:
+            from ultralytics import YOLO
+            yolo_pose = YOLO('yolov8n-pose.pt')
+            logger.info("YOLO pose model loaded successfully")
+        except Exception as e:
+            logger.error(f"Failed to load YOLO pose model: {e}")
+            yolo_pose = None
+    return yolo_pose
+
+def get_image_model():
+    global model
+    if model is None:
+        logger.info("Downloading and loading image model...")
+        if not os.path.exists(MODEL_PATH):
+            logger.info("Downloading image model from Google Drive...")
+            try:
+                gdown.download(
+                    'https://drive.google.com/uc?id=1iD4fTGnUqcIqY1MC6tA-3FxMvlzqezmm',
+                    MODEL_PATH, quiet=False
+                )
+                logger.info("Image model downloaded successfully!")
+            except Exception as e:
+                logger.error(f"Failed to download image model: {e}")
+                raise RuntimeError(f"Could not download image model: {e}")
+
+        logger.info("Loading image model...")
+        try:
+            model = load_model(MODEL_PATH, compile=False)
+            logger.info("Image model loaded successfully!")
+        except Exception as e:
+            logger.error(f"Load failed with error: {e}")
+            try:
+                logger.info("Attempting alternative load method...")
+                model = load_model(MODEL_PATH, compile=False, safe_mode=False)
+            except Exception as e2:
+                logger.error(f"Alternative load also failed: {e2}")
+                raise RuntimeError(f"Could not load image model: {e2}")
+    return model
+
+def get_video_model():
+    global video_model
+    if video_model is None:
+        logger.info("Downloading and loading video model...")
+        if not os.path.exists(VIDEO_MODEL_PATH):
+            logger.info("Downloading video model from Google Drive...")
+            try:
+                gdown.download(
+                    'https://drive.google.com/uc?id=1cBIkNEP9UT5YppdeVftYtBUL1Cyj820f',
+                    VIDEO_MODEL_PATH, quiet=False
+                )
+                logger.info("Video model downloaded successfully!")
+            except Exception as e:
+                logger.error(f"Failed to download video model: {e}")
+                raise RuntimeError(f"Could not download video model: {e}")
+
+        logger.info("Loading video model...")
+        try:
+            video_model = load_model(VIDEO_MODEL_PATH, compile=False)
+            logger.info("Video model loaded successfully!")
+        except Exception as e:
+            logger.error(f"Load failed with error: {e}")
+            try:
+                logger.info("Attempting alternative load method...")
+                video_model = load_model(VIDEO_MODEL_PATH, compile=False, safe_mode=False)
+            except Exception as e2:
+                logger.error(f"Alternative load also failed: {e2}")
+                raise RuntimeError(f"Could not load video model: {e2}")
+    return video_model
+
 def draw_pose_skeleton_frame(frame_bgr):
     drawn = frame_bgr.copy()
-    results = yolo_pose(drawn, verbose=False)
+    yolo_pose_model = get_yolo_pose()
+    if yolo_pose_model is None:
+        return frame_to_base64(frame_bgr), False
+
+    results = yolo_pose_model(drawn, verbose=False)
     skeleton_found = False
 
     KEY_CONNECTIONS = [
@@ -103,61 +208,6 @@ def draw_pose_skeleton_frame(frame_bgr):
 
     _, buffer = cv2.imencode('.jpg', drawn)
     return base64.b64encode(buffer).decode('utf-8'), skeleton_found
-# ── Config ───────────────────────────────────────────────────
-UPLOAD_FOLDER = 'uploads'
-ALLOWED_EXT   = {'jpg', 'jpeg', 'png'}
-MODEL_PATH    = 'violence_model_v2.h5'
-VIDEO_MODEL_PATH = 'violence_video_model_v2.h5'
-
-MODE_THRESHOLDS = {
-    'cctv':         0.2,
-    'social_media': 0.4
-}
-
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# ── Download models if not present ───────────────────────────
-print("Checking for model files...")
-if not os.path.exists(MODEL_PATH):
-    print("Downloading image model...")
-    try:
-        gdown.download(
-            'https://drive.google.com/uc?id=1iD4fTGnUqcIqY1MC6tA-3FxMvlzqezmm',
-            MODEL_PATH, quiet=False
-        )
-        print("Image model downloaded!")
-    except Exception as e:
-        print(f"Failed to download image model: {e}")
-
-if not os.path.exists(VIDEO_MODEL_PATH):
-    print("Downloading video model...")
-    try:
-        gdown.download(
-            'https://drive.google.com/uc?id=1cBIkNEP9UT5YppdeVftYtBUL1Cyj820f',
-            VIDEO_MODEL_PATH, quiet=False
-        )
-        print("Video model downloaded!")
-    except Exception as e:
-        print(f"Failed to download video model: {e}")
-
-# ── Load models ───────────────────────────────────────────────
-print("Loading image model...")
-try:
-    model = load_model(MODEL_PATH, compile=False)
-except Exception as e:
-    print(f"Load failed with error: {e}")
-    print("Attempting alternative load method...")
-    model = load_model(MODEL_PATH, compile=False, safe_mode=False)
-print("Image model loaded!")
-
-print("Loading video model...")
-try:
-    video_model = load_model(VIDEO_MODEL_PATH, compile=False)
-except Exception as e:
-    print(f"Load failed with error: {e}")
-    print("Attempting alternative load method...")
-    video_model = load_model(VIDEO_MODEL_PATH, compile=False, safe_mode=False)
-print("Video model loaded!")
 
 
 
@@ -167,25 +217,34 @@ def allowed_file(filename):
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXT
 
 def predict_image(img_path, threshold=0.5):
+    model_to_use = get_image_model()
+    if model_to_use is None:
+        raise RuntimeError("Image model failed to load")
     img       = image.load_img(img_path, target_size=(224, 224))
     img_array = image.img_to_array(img)
     img_array = np.expand_dims(img_array, axis=0) / 255.0
-    pred      = model.predict(img_array, verbose=0)[0][0]
+    pred      = model_to_use.predict(img_array, verbose=0)[0][0]
     label     = 'Violence' if pred > threshold else 'Non-Violence'
     confidence = pred if pred > threshold else 1 - pred
     return label, float(confidence), float(pred)
 
 
 def predict_frame(frame_bgr, threshold=0.5):
+    model_to_use = get_image_model()
+    if model_to_use is None:
+        raise RuntimeError("Image model failed to load")
     frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
     resized = cv2.resize(frame_rgb, (224, 224))
     img_array = np.expand_dims(resized.astype(np.float32), axis=0) / 255.0
-    pred = model.predict(img_array, verbose=0)[0][0]
+    pred = model_to_use.predict(img_array, verbose=0)[0][0]
     label = 'Violence' if pred > threshold else 'Non-Violence'
     confidence = pred if pred > threshold else 1 - pred
     return label, float(confidence), float(pred)
 
 def predict_video_clip(frames_list, threshold=0.5):
+    video_model_to_use = get_video_model()
+    if video_model_to_use is None:
+        raise RuntimeError("Video model failed to load")
     frames_resized = []
     for frame in frames_list:
         f = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
@@ -196,7 +255,7 @@ def predict_video_clip(frames_list, threshold=0.5):
         frames_resized.append(frames_resized[-1])
     clip = np.array(frames_resized[:8], dtype=np.float32)
     clip = np.expand_dims(clip, axis=0)
-    pred = video_model.predict(clip, verbose=0)[0][0]
+    pred = video_model_to_use.predict(clip, verbose=0)[0][0]
     label = 'Violence' if pred > threshold else 'Non-Violence'
     confidence = pred if pred > threshold else 1 - pred
     return label, float(confidence), float(pred)
