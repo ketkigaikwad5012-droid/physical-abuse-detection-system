@@ -1,19 +1,26 @@
 FROM python:3.9-slim
 
-WORKDIR /app
-
 RUN apt-get update && apt-get install -y \
     libglib2.0-0 \
     libsm6 \
     libxext6 \
     libxrender-dev \
     libgomp1 \
+    libgl1-mesa-glx \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+RUN useradd -m -u 1000 user
+USER user
+ENV PATH="/home/user/.local/bin:$PATH"
+
+WORKDIR /app
+
+COPY --chown=user requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+COPY --chown=user . /app
+
+RUN mkdir -p uploads
 
 EXPOSE 7860
 
