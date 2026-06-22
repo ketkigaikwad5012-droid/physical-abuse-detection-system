@@ -1,6 +1,5 @@
 ---
 title: Physical Abuse Detection
-emoji: 📚
 colorFrom: purple
 colorTo: gray
 sdk: docker
